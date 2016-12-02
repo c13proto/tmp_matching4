@@ -33,6 +33,10 @@
             this.button_検査対象 = new System.Windows.Forms.Button();
             this.pictureBoxIpl = new OpenCvSharp.UserInterface.PictureBoxIpl();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.radioButton_二値化 = new System.Windows.Forms.RadioButton();
+            this.trackBar_th = new System.Windows.Forms.TrackBar();
+            this.textBox_th = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.radioButton_合成 = new System.Windows.Forms.RadioButton();
             this.button_合成 = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
@@ -45,8 +49,13 @@
             this.radioButton_検査対象 = new System.Windows.Forms.RadioButton();
             this.radioButton_比較対象 = new System.Windows.Forms.RadioButton();
             this.radioButton_テンプレート = new System.Windows.Forms.RadioButton();
+            this.button_正解リスト = new System.Windows.Forms.Button();
+            this.button_評価開始 = new System.Windows.Forms.Button();
+            this.radioButton_評価開始 = new System.Windows.Forms.RadioButton();
+            this.button_全探索 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIpl)).BeginInit();
             this.panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBar_th)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar)).BeginInit();
             this.SuspendLayout();
             // 
@@ -82,7 +91,7 @@
             // 
             // pictureBoxIpl
             // 
-            this.pictureBoxIpl.Location = new System.Drawing.Point(122, 3);
+            this.pictureBoxIpl.Location = new System.Drawing.Point(117, 3);
             this.pictureBoxIpl.Name = "pictureBoxIpl";
             this.pictureBoxIpl.Size = new System.Drawing.Size(549, 328);
             this.pictureBoxIpl.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
@@ -91,6 +100,14 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.button_全探索);
+            this.panel1.Controls.Add(this.radioButton_評価開始);
+            this.panel1.Controls.Add(this.button_評価開始);
+            this.panel1.Controls.Add(this.button_正解リスト);
+            this.panel1.Controls.Add(this.radioButton_二値化);
+            this.panel1.Controls.Add(this.trackBar_th);
+            this.panel1.Controls.Add(this.textBox_th);
+            this.panel1.Controls.Add(this.label1);
             this.panel1.Controls.Add(this.radioButton_合成);
             this.panel1.Controls.Add(this.button_合成);
             this.panel1.Controls.Add(this.label2);
@@ -108,8 +125,47 @@
             this.panel1.Controls.Add(this.button_テンプレート);
             this.panel1.Location = new System.Drawing.Point(3, 3);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(113, 309);
+            this.panel1.Size = new System.Drawing.Size(108, 430);
             this.panel1.TabIndex = 4;
+            // 
+            // radioButton_二値化
+            // 
+            this.radioButton_二値化.AutoSize = true;
+            this.radioButton_二値化.Location = new System.Drawing.Point(4, 194);
+            this.radioButton_二値化.Name = "radioButton_二値化";
+            this.radioButton_二値化.Size = new System.Drawing.Size(14, 13);
+            this.radioButton_二値化.TabIndex = 15;
+            this.radioButton_二値化.UseVisualStyleBackColor = true;
+            this.radioButton_二値化.CheckedChanged += new System.EventHandler(this.CheckedChange_二値化);
+            // 
+            // trackBar_th
+            // 
+            this.trackBar_th.AutoSize = false;
+            this.trackBar_th.Location = new System.Drawing.Point(20, 217);
+            this.trackBar_th.Maximum = 255;
+            this.trackBar_th.Name = "trackBar_th";
+            this.trackBar_th.Size = new System.Drawing.Size(74, 14);
+            this.trackBar_th.TabIndex = 14;
+            this.trackBar_th.Value = 10;
+            this.trackBar_th.ValueChanged += new System.EventHandler(this.ValueChanged_th);
+            // 
+            // textBox_th
+            // 
+            this.textBox_th.Location = new System.Drawing.Point(71, 192);
+            this.textBox_th.Name = "textBox_th";
+            this.textBox_th.Size = new System.Drawing.Size(23, 19);
+            this.textBox_th.TabIndex = 13;
+            this.textBox_th.Text = "10";
+            this.textBox_th.TextChanged += new System.EventHandler(this.TextChanged_th);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(24, 195);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(41, 12);
+            this.label1.TabIndex = 12;
+            this.label1.Text = "二値化";
             // 
             // radioButton_合成
             // 
@@ -156,12 +212,12 @@
             this.textBox_filter.Name = "textBox_filter";
             this.textBox_filter.Size = new System.Drawing.Size(23, 19);
             this.textBox_filter.TabIndex = 7;
-            this.textBox_filter.Text = "1";
+            this.textBox_filter.Text = "0";
             // 
             // trackBar
             // 
             this.trackBar.AutoSize = false;
-            this.trackBar.Location = new System.Drawing.Point(9, 247);
+            this.trackBar.Location = new System.Drawing.Point(3, 304);
             this.trackBar.Maximum = 3;
             this.trackBar.Name = "trackBar";
             this.trackBar.Size = new System.Drawing.Size(101, 30);
@@ -190,7 +246,7 @@
             // 
             // button_画像保存
             // 
-            this.button_画像保存.Location = new System.Drawing.Point(23, 283);
+            this.button_画像保存.Location = new System.Drawing.Point(18, 349);
             this.button_画像保存.Name = "button_画像保存";
             this.button_画像保存.Size = new System.Drawing.Size(75, 23);
             this.button_画像保存.TabIndex = 3;
@@ -230,12 +286,52 @@
             this.radioButton_テンプレート.UseVisualStyleBackColor = true;
             this.radioButton_テンプレート.CheckedChanged += new System.EventHandler(this.CheckedChange_テンプレート);
             // 
+            // button_正解リスト
+            // 
+            this.button_正解リスト.Location = new System.Drawing.Point(23, 246);
+            this.button_正解リスト.Name = "button_正解リスト";
+            this.button_正解リスト.Size = new System.Drawing.Size(75, 23);
+            this.button_正解リスト.TabIndex = 16;
+            this.button_正解リスト.Text = "正解リスト";
+            this.button_正解リスト.UseVisualStyleBackColor = true;
+            this.button_正解リスト.Click += new System.EventHandler(this.Click_正解リスト);
+            // 
+            // button_評価開始
+            // 
+            this.button_評価開始.Location = new System.Drawing.Point(23, 275);
+            this.button_評価開始.Name = "button_評価開始";
+            this.button_評価開始.Size = new System.Drawing.Size(75, 23);
+            this.button_評価開始.TabIndex = 17;
+            this.button_評価開始.Text = "評価開始";
+            this.button_評価開始.UseVisualStyleBackColor = true;
+            this.button_評価開始.Click += new System.EventHandler(this.Click_評価開始);
+            // 
+            // radioButton_評価開始
+            // 
+            this.radioButton_評価開始.AutoSize = true;
+            this.radioButton_評価開始.Location = new System.Drawing.Point(3, 280);
+            this.radioButton_評価開始.Name = "radioButton_評価開始";
+            this.radioButton_評価開始.Size = new System.Drawing.Size(14, 13);
+            this.radioButton_評価開始.TabIndex = 18;
+            this.radioButton_評価開始.UseVisualStyleBackColor = true;
+            this.radioButton_評価開始.CheckedChanged += new System.EventHandler(this.CheckedChange_評価開始);
+            // 
+            // button_全探索
+            // 
+            this.button_全探索.Location = new System.Drawing.Point(18, 378);
+            this.button_全探索.Name = "button_全探索";
+            this.button_全探索.Size = new System.Drawing.Size(75, 23);
+            this.button_全探索.TabIndex = 19;
+            this.button_全探索.Text = "全探索";
+            this.button_全探索.UseVisualStyleBackColor = true;
+            this.button_全探索.Click += new System.EventHandler(this.Click_全探索);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(674, 334);
+            this.ClientSize = new System.Drawing.Size(684, 494);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.pictureBoxIpl);
             this.Name = "Main";
@@ -243,6 +339,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIpl)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBar_th)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -268,6 +365,14 @@
         private System.Windows.Forms.TextBox textBox_filter;
         private System.Windows.Forms.RadioButton radioButton_合成;
         private System.Windows.Forms.Button button_合成;
+        private System.Windows.Forms.TrackBar trackBar_th;
+        private System.Windows.Forms.TextBox textBox_th;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.RadioButton radioButton_二値化;
+        private System.Windows.Forms.Button button_評価開始;
+        private System.Windows.Forms.Button button_正解リスト;
+        private System.Windows.Forms.RadioButton radioButton_評価開始;
+        private System.Windows.Forms.Button button_全探索;
     }
 }
 

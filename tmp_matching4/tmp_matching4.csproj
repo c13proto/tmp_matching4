@@ -75,6 +75,7 @@
       <DependentUpon>Main.cs</DependentUpon>
     </Compile>
     <Compile Include="MyCV.cs" />
+    <Compile Include="MyFunction.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Main.resx">

@@ -24,13 +24,59 @@ namespace tmp_matching4
             indexer = null;
 
         }
+
+        public void Absdiff_mask(ref Mat dst,Mat src1,Mat src2,Mat mask)
+        {
+            var indexer1 = new MatOfByte3(src1).GetIndexer();
+            var indexer2 = new MatOfByte3(src2).GetIndexer();
+            var indexer_mask = new MatOfByte3(mask).GetIndexer();
+            var indexer_dst= new MatOfByte3(dst).GetIndexer();
+
+            for (int x = 0; x < dst.Width; x++)
+                for (int y = 0; y < dst.Height; y++)
+                {
+                    int color1 = indexer1[y, x].Item0;
+                    int color2 = indexer2[y, x].Item0;
+                    int color_mask = indexer_mask[y, x].Item0;
+
+                    var color = indexer_mask[y, x];
+                    if (indexer_mask[y, x].Item0 == 0)//マスク画像の黒領域
+                        color.Item0 = (byte)Math.Abs(color1 - color2);
+                    else
+                        color.Item0 = 0;//白領域は比較しない
+
+                    indexer_dst[y, x] =color;
+                }
+            indexer1 = null;
+            indexer2 = null;
+            indexer_mask = null;
+            indexer_dst = null;
+        }
+        public void paint_black(ref Mat src,Mat mask)//maskの白領域をsrcの上に黒塗り
+        {
+            var indexer_src = new MatOfByte3(src).GetIndexer();
+            var indexer_mask = new MatOfByte3(mask).GetIndexer();
+
+            for (int x = 0; x < src.Width; x++)
+                for (int y = 0; y < src.Height; y++)
+                {
+                    int color_src = indexer_src[y, x].Item0;
+                    int color_mask = indexer_mask[y, x].Item0;
+
+                    var color = indexer_src[y, x];
+                    if (indexer_mask[y, x].Item0 != 0)//マスク画像の白領域
+                        color.Item0 = 0;
+                    indexer_src[y, x] = color;
+                }
+            indexer_src = null;
+            indexer_mask = null;
+        }
+
         public void Add4(ref Mat dst, Mat[] src)
         {
-            for (int i = 0; i < 4; i++)
-            {
-                Cv2.Add(dst,src[i],dst);
-            }
+            for (int i = 0; i < 4; i++) Cv2.Add(dst, src[i], dst);
         }
+
         public void 自作反射光除去(Mat[] images, ref Mat DST)
         {
             int width = images[0].Width;
@@ -139,124 +185,134 @@ namespace tmp_matching4
 
             mask.Dispose();
         }
-        //public void 評価結果画像作成_debug(Mat 検査結果, Mat テンプレート, int[,] 正解座標, ref Mat color_debug)
-        //{
+        public void 評価結果画像作成_debug(Mat 検査結果, Mat テンプレート, int[,] 正解座標, ref Mat color_debug)
+        {
 
-        //    Mat res_color = new Mat(new Size(検査結果.Width, 検査結果.Height), MatType.CV_8UC3, Scalar.All(0));
-        //    var temp_color = res_color.Clone();
-
-        //    CvBlobs blobs = new CvBlobs(検査結果);
-        //    int score = 0;
-
-        //    blobs.FilterByArea(Main.FilterByArea[0], Main.FilterByArea[1]);
-        //    blobs.RenderBlobs(検査結果, res_color);
+            Mat res_color = new Mat(new Size(検査結果.Width, 検査結果.Height), MatType.CV_8UC3, Scalar.All(0));
+            var temp_color = res_color.Clone();
+            var result_clone = 検査結果.Clone();
 
 
-        //    Cv2.CvtColor(テンプレート, temp_color, ColorConversionCodes.GRAY2BGR);
-        //    Cv2.Add(temp_color, res_color, color_debug);
+            paint_black(ref result_clone, テンプレート);
+            CvBlobs blobs = new CvBlobs(result_clone);
+            int score = 0;
 
-        //    点数計算_debug(blobs, 正解座標, ref color_debug, ref score);
+            blobs.FilterByArea(9, 250);
+            blobs.RenderBlobs(result_clone, res_color);
 
-        //    res_color.Dispose();
-        //    temp_color.Dispose();
-        //    blobs = null;
+            Cv2.CvtColor(テンプレート, temp_color, ColorConversionCodes.GRAY2BGR);
+            Cv2.Add(temp_color, res_color, color_debug);
 
-        //}
+            点数計算_debug(blobs, 正解座標, ref color_debug, ref score);
 
-        //public void 点数計算_debug(CvBlobs blobs, int[,] 正解座標, ref Mat color, ref int score)
-        //{
-        //    if (正解座標 != null)
-        //    {
+            
 
-        //        int[,] 正解座標2 = (int[,])正解座標.Clone();
-        //        int 正解数 = 0;
-        //        int 不正解数 = 0;
-        //        int 許容回数 = 探索画面.許容不正解数;
-        //        int 未検出数 = 0;
+            res_color = null;
+            temp_color=null;
+            blobs = null;
+            result_clone = null;
 
-        //        foreach (CvBlob item in blobs.Values)
-        //        {
-        //            CvContourPolygon polygon = item.Contour.ConvertToPolygon();
-        //            Point2f circleCenter;
-        //            float circleRadius;
+        }
 
-        //            GetEnclosingCircle(polygon, out circleCenter, out circleRadius);
-        //            for (int j = 0; j < 正解座標2.Length / 2; j++)
-        //            {
-        //                if (正解座標2[j, 0] != 0 && (Math.Pow(circleCenter.X - 正解座標2[j, 0], 2) + Math.Pow(circleCenter.Y - 正解座標2[j, 1], 2) < circleRadius * circleRadius))
-        //                {//外接円内にあったら
-        //                    Cv2.Circle(color, item.Centroid, (int)circleRadius, new Scalar(0, 0, 255), 2);
-        //                    正解数++;
-        //                    正解座標2[j, 0] = 正解座標2[j, 1] = 0;
-        //                    j = 正解座標2.Length;//ひとつ照合確定したら，このfor文を抜けて次のラベルの検査に移動
-        //                }
-        //            }
-        //        }
+        public void 点数計算_debug(CvBlobs blobs, int[,] 正解座標, ref Mat color, ref int score)
+        {
+            if (正解座標 != null)
+            {
 
-        //        System.Diagnostics.Debug.WriteLine("未検出座標");
-        //        for (int i = 0; i < 正解座標2.Length / 2; i++)
-        //        {//検出されなかった座標が残る
-        //            if (正解座標2[i, 0] != 0)
-        //            {
-        //                System.Diagnostics.Debug.WriteLine(i + ":" + 正解座標2[i, 0] + "," + 正解座標2[i, 1]);
-        //                未検出数++;
-        //            }
-        //        }
+                int[,] 正解座標2 = (int[,])正解座標.Clone();
+                int 正解数 = 0;
+                int 不正解数 = 0;
+                int 許容回数 = 5;
+                int 未検出数 = 0;
 
-        //        不正解数 = blobs.Count - 正解数;
-        //        if (不正解数 <= 許容回数) score = (int)((float)(正解数) * (10000.0f / (正解座標.Length / 2)));
-        //        else score = (int)((float)(正解数 - (不正解数 - 許容回数)) * (10000.0f / (正解座標.Length / 2)));
+                foreach (CvBlob item in blobs.Values)
+                {
+                    CvContourPolygon polygon = item.Contour.ConvertToPolygon();
+                    Point2f circleCenter;
+                    float circleRadius;
 
-        //        Cv2.PutText(color, "score= " + score.ToString(), new Point(10, 120), HersheyFonts.HersheySimplex, 1, new Scalar(0, 0, 0));
-        //        Cv2.PutText(color, "unCorrect= " + 不正解数.ToString(), new Point(10, 140), HersheyFonts.HersheySimplex, 1, new Scalar(0, 0, 0));
-        //        Cv2.PutText(color, "unFind= " + 未検出数.ToString(), new Point(10, 160), HersheyFonts.HersheySimplex, 1, new Scalar(0, 0, 0));
-        //    }
-        //}
+                    GetEnclosingCircle(polygon, out circleCenter, out circleRadius);
+                    for (int j = 0; j < 正解座標2.Length / 2; j++)
+                    {
+                        if (正解座標2[j, 0] != 0 && (Math.Pow(circleCenter.X - 正解座標2[j, 0], 2) + Math.Pow(circleCenter.Y - 正解座標2[j, 1], 2) < circleRadius * circleRadius))
+                        {//外接円内にあったら
+                            Cv2.Circle(color, item.Centroid, (int)circleRadius, new Scalar(0, 0, 255), 2);
+                            正解数++;
+                            正解座標2[j, 0] = 正解座標2[j, 1] = 0;
+                            j = 正解座標2.Length;//ひとつ照合確定したら，このfor文を抜けて次のラベルの検査に移動
+                        }
+                    }
+                }
 
-        //public int[] 点数計算(Mat 検査結果, int[,] 正解座標)
-        //{
+                System.Diagnostics.Debug.WriteLine("未検出座標");
+                for (int i = 0; i < 正解座標2.Length / 2; i++)
+                {//検出されなかった座標が残る
+                    if (正解座標2[i, 0] != 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine(i + ":" + 正解座標2[i, 0] + "," + 正解座標2[i, 1]);
+                        未検出数++;
+                    }
+                }
 
-        //    int score = 0;
-        //    CvBlobs blobs = new CvBlobs(検査結果);
-        //    blobs.FilterByArea(Main.FilterByArea[0], Main.FilterByArea[1]);
+                不正解数 = blobs.Count - 正解数;
+                if (不正解数 <= 許容回数) score = (int)((float)(正解数) * (10000.0f / (正解座標.Length / 2)));
+                else score = (int)((float)(正解数 - (不正解数 - 許容回数)) * (10000.0f / (正解座標.Length / 2)));
 
-        //    int[,] 正解座標2 = (int[,])正解座標.Clone();
-        //    int 正解数 = 0;
-        //    int 不正解数 = 0;
-        //    int 許容回数 = 探索画面.許容不正解数;
-        //    int 未検出数 = 0;
+                Cv2.PutText(color, "score= " + score.ToString(), new Point(10, 120), HersheyFonts.HersheySimplex, 1, new Scalar(0, 0, 0));
+                Cv2.PutText(color, "unCorrect= " + 不正解数.ToString(), new Point(10, 140), HersheyFonts.HersheySimplex, 1, new Scalar(0, 0, 0));
+                Cv2.PutText(color, "unFind= " + 未検出数.ToString(), new Point(10, 160), HersheyFonts.HersheySimplex, 1, new Scalar(0, 0, 0));
+            }
+        }
 
-        //    foreach (CvBlob item in blobs.Values)
-        //    {
-        //        CvContourPolygon polygon = item.Contour.ConvertToPolygon();
-        //        Point2f circleCenter;
-        //        float circleRadius;
+        public int[] 点数計算(Mat 検査結果,Mat テンプレート, int[,] 正解座標)
+        {
 
-        //        GetEnclosingCircle(polygon, out circleCenter, out circleRadius);
-        //        for (int j = 0; j < 正解座標2.Length / 2; j++)
-        //        {
-        //            if (正解座標2[j, 0] != 0 && (Math.Pow(circleCenter.X - 正解座標2[j, 0], 2) + Math.Pow(circleCenter.Y - 正解座標2[j, 1], 2) < circleRadius * circleRadius))
-        //            {//外接円内にあったら
-        //                正解数++;
-        //                正解座標2[j, 0] = 正解座標2[j, 1] = 0;
-        //                j = 正解座標2.Length;//ひとつ照合確定したら，このfor文を抜けて次のラベルの検査に移動
-        //            }
-        //        }
-        //    }
+            int score = 0;
+            var result_clone = 検査結果.Clone();
+            paint_black(ref result_clone, テンプレート);
 
-        //    for (int i = 0; i < 正解座標2.Length / 2; i++)
-        //    {//検出されなかった座標が残る
-        //        if (正解座標2[i, 0] != 0) 未検出数++;
-        //    }
+            CvBlobs blobs = new CvBlobs(検査結果);
+            blobs.FilterByArea(9, 250);
 
-        //    不正解数 = blobs.Count - 正解数;
+            int[,] 正解座標2 = (int[,])正解座標.Clone();
+            int 正解数 = 0;
+            int 不正解数 = 0;
+            int 許容回数 = 5;
+            int 未検出数 = 0;
 
-        //    if (不正解数 <= 許容回数) score = (int)((float)(正解数) * (10000.0f / (正解座標.Length / 2)));
-        //    else score = (int)((float)(正解数 - (不正解数 - 許容回数)) * (10000.0f / (正解座標.Length / 2)));
+            foreach (CvBlob item in blobs.Values)
+            {
+                CvContourPolygon polygon = item.Contour.ConvertToPolygon();
+                Point2f circleCenter;
+                float circleRadius;
 
-        //    blobs = null;
-        //    return new int[] { score, 不正解数, 未検出数 };
-        //}
+                GetEnclosingCircle(polygon, out circleCenter, out circleRadius);
+                for (int j = 0; j < 正解座標2.Length / 2; j++)
+                {
+                    if (正解座標2[j, 0] != 0 && (Math.Pow(circleCenter.X - 正解座標2[j, 0], 2) + Math.Pow(circleCenter.Y - 正解座標2[j, 1], 2) < circleRadius * circleRadius))
+                    {//外接円内にあったら
+                        正解数++;
+                        正解座標2[j, 0] = 正解座標2[j, 1] = 0;
+                        j = 正解座標2.Length;//ひとつ照合確定したら，このfor文を抜けて次のラベルの検査に移動
+                    }
+                }
+            }
+
+            for (int i = 0; i < 正解座標2.Length / 2; i++)
+            {//検出されなかった座標が残る
+                if (正解座標2[i, 0] != 0) 未検出数++;
+            }
+
+            不正解数 = blobs.Count - 正解数;
+
+            if (不正解数 <= 許容回数) score = (int)((float)(正解数) * (10000.0f / (正解座標.Length / 2)));
+            else score = (int)((float)(正解数 - (不正解数 - 許容回数)) * (10000.0f / (正解座標.Length / 2)));
+
+            blobs = null;
+            result_clone = null;
+
+            return new int[] { score, 不正解数, 未検出数 };
+        }
         public void GetEnclosingCircle(IEnumerable<Point> points, out Point2f center, out float radius)
         {
             var pointsArray = points.ToArray();
