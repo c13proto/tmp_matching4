@@ -198,9 +198,10 @@ namespace tmp_matching4
                 {
                     Mat mask = 比較対象[i].Clone();
                     
-                    var kernel = Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(5, 5));
+                    var kernel = Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(3, 3));
+                    mycv.二値化(ref mask, 60);//美品の光っている領域は鏡面反射成分なので比較対象から除きたい
                     Cv2.MorphologyEx(mask,mask, MorphTypes.DILATE, kernel);//鏡面反射箇所を膨張
-                    mycv.二値化(ref mask, 150);//光っている領域を比較対象から除きたい
+                    
                     Cv2.Add(mask, テンプレート, mask);
 
                     比較結果[i]=new Mat(比較対象[i].Height, 比較対象[i].Width, MatType.CV_8UC1);

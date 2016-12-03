@@ -195,17 +195,16 @@ namespace tmp_matching4
 
             paint_black(ref result_clone, テンプレート);
             CvBlobs blobs = new CvBlobs(result_clone);
-            int score = 0;
 
             blobs.FilterByArea(9, 250);
             blobs.RenderBlobs(result_clone, res_color);
 
+            
+
             Cv2.CvtColor(テンプレート, temp_color, ColorConversionCodes.GRAY2BGR);
             Cv2.Add(temp_color, res_color, color_debug);
 
-            点数計算_debug(blobs, 正解座標, ref color_debug, ref score);
-
-            
+            点数計算_debug(blobs, 正解座標, ref color_debug);
 
             res_color = null;
             temp_color=null;
@@ -214,7 +213,7 @@ namespace tmp_matching4
 
         }
 
-        public void 点数計算_debug(CvBlobs blobs, int[,] 正解座標, ref Mat color, ref int score)
+        public void 点数計算_debug(CvBlobs blobs, int[,] 正解座標, ref Mat color)
         {
             if (正解座標 != null)
             {
@@ -224,6 +223,7 @@ namespace tmp_matching4
                 int 不正解数 = 0;
                 int 許容回数 = 5;
                 int 未検出数 = 0;
+                int score=0;
 
                 foreach (CvBlob item in blobs.Values)
                 {
@@ -271,7 +271,7 @@ namespace tmp_matching4
             var result_clone = 検査結果.Clone();
             paint_black(ref result_clone, テンプレート);
 
-            CvBlobs blobs = new CvBlobs(検査結果);
+            CvBlobs blobs = new CvBlobs(result_clone);
             blobs.FilterByArea(9, 250);
 
             int[,] 正解座標2 = (int[,])正解座標.Clone();
